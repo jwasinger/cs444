@@ -1,0 +1,36 @@
+
+Processes:
+	Similar to Linux:
+		-> Processes create child processes
+		-> Processes have PIDs
+		-> Kernel Stack
+
+Threads:
+	Different from Linux:
+		-> Distinct relationship between threads and processes
+			Reason:
+			Keeping everything as a process simplifies things (linux is elegant).
+
+		-> FreeBSD threads can share all process resources including PID (in their lightest form)
+
+	Similar to Linux:
+		-> Adoption of pthread standard
+			Reason:
+			Increased portability
+
+		-> Kernel Threads
+	Scheduling in Linux:
+		-> vruntime is determined per-thread based on (...)
+		-> process (task) with lowest vruntime is chosen next
+		-> an rb-tree is for efficiency (expand here).
+		-> Context Switching
+	
+	Scheduling in FreeBSD:
+		-> CPU time is determined based on scheduling class and scheduling priority
+			* scheduling class (...)
+			* scheduling priority (...)
+		-> Context Switching: 
+			* Voluntary vs Involuntary (99)
+	Similar to Linux:
+		Thread/Process priority is somewhat `tunable` by the user
+

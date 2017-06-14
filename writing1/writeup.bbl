@@ -1,0 +1,18 @@
+\begin{thebibliography}{1}
+
+\bibitem{lkd}
+Robert Love.
+\newblock {\em {Linux} kernel development}.
+\newblock Novell Press, Indianapolis, IN, USA, second edition, 2005.
+
+\bibitem{freebsd}
+Marshall~Kirk McKusick, George~V Neville-Neil, and Robert~NM Watson.
+\newblock {\em The design and implementation of the FreeBSD operating system}.
+\newblock Pearson Education, 2014.
+
+\bibitem{windows}
+Mark~E Russinovich, David~A Solomon, and Alex Ionescu.
+\newblock {\em Windows Internals, Part 1}.
+\newblock Pearson Education, 2012.
+
+\end{thebibliography}

@@ -1,0 +1,31 @@
+Unlike Linux-based operating systems which make
+no distinction between threads and processes, Win-
+dows defines a clear distinction between threads and
+processes. Each process in windows is represented
+by an instance of an executive process (EPROCESS)
+structure. Among other things, this structure also
+contains references to the threads allocated for any
+given process. For each process that is executing
+a Win32 executable, there is a separate structure
+maintained in parallel by the Win32 subsystem
+process (CRSS). Windows introduces the concept
+of a ’protected process’. An administrator has full
+control over the code running in any process on
+the system. However, this elevated privilege could
+potentially be used to perform illegal activities
+(such as extracting movie/song information from
+movie/video player processes). Protected processes
+exist alongside normal process. However, they add
+significant constraints to access rights from other
+processes executing on the system. Protected pro-
+cesses can only be created if the executable image
+file has been signed with a special Windows Media
+Certificate. (368) This was probably implemented
+this way so that Windows would be more attrac-
+tive as a commercial platform for software. This
+way, companies building video/sound editing and
+playback programs would feel more comfortable
+deploying their software to Windows. It is also
+likely that Microsoft gets to make some extra profit
+by charging to issue the special Windows Media
+Certificates.

@@ -1,0 +1,87 @@
+\documentclass[onecolumn,10pt]{IEEETran}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float} \usepackage{color}
+\usepackage{url}
+\usepackage{listings}
+
+\usepackage{balance}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+%random comment
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\include{IEEETrans.cls}
+
+%\newcommand{\toc}{\tableofcontents}
+
+\title{CS 444 Writing Assignment 3}
+\author{Jared Wasinger}
+
+\parindent = 0.0 in
+\parskip = 0.1 in
+
+\begin{document}
+
+\lstset{language=C,
+                basicstyle=\ttfamily,
+                keywordstyle=\color{blue}\ttfamily,
+                stringstyle=\color{red}\ttfamily,
+                commentstyle=\color{green}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#}
+}
+\maketitle
+
+\section{Linux Memory Management}
+
+"Pages are the basic unit of memory management.",
+The kernel represents all physical pages on the system using the \textbf{struct page} structure.
+Reference tracking is used to mark which pages are in use.  Pages in Linux represent the physical memory of a system (not virtual).  Thus, the contents of kernel pages are susceptible to change.
+
+Many Linux systems support multiple page sizes.  32-bit architectures have 4KB pages while 64-bit architectures have 8KB pages (Love, 231).
+
+Pages are further segregated into zones.  Zones better delineate the different properties of pages.  For example, some zones may refer to areas of high memory.  Other zones represent physical memory capable of performing Direct Memory Access.
+
+The kernel presents a set of functions to allocate memory: \textbf{kmalloc}, \textbf{vmalloc}. \textbf{kmalloc} is the most commonly invoked function which allocates physical memory.
+
+\begin{lstlisting}
+struct page {
+	unsigned long flags;
+	atomic_t _count;
+	atomic_t _mapcount;
+	unsigned long private;
+	struct address_space *mapping;
+	pgoff_t index;
+	struct list_head lru;
+	void *virtual;
+};
+
+Linux implements page caching by using physical pages in RAM to correspond to physical blocks on a disk.  Linux implements the \textbf{write-back} strategy for processing write operations.  Using this mechanism, the operating system makes write calls to the page-cache directly, only periodically writing these back to disk.
+\end{lstlisting}
+
+\section{FreeBSD Memory Management}
+
+Like Linux, FreeBSD uses an array of page structures which represent all the physical pages on the system.  In FreeBSD, these pages are represented by \textbf{struct vm\_page\_t}.  
+
+FreeBSD differs slightly from Linux with respect to the specific implementation of the collection of \textbf{struct vm\_page\_t}.  FreeBSD pages can be in one of five states: wired, active, inactive, cache or free.
+
+FreeBSD keeps instances of the \textbf{struct vm\_page\_t} stored in a doubly-linked array.  For each possible page state, FreeBSD maintains a set of queues of varying sizes (based on the size of processor's L1/L2 Cache)
+
+\section{Windows Memory Management}
+
+Windows memory management has significant differences compared to FreeBSD and Linux.  Virtual memory is provided by a set of system services known as the Memory Manager.  These services include allocation and de-allocation of virtual memory, memory sharing between processes and others.
+
+Windows also represent internal memory using pages which are similar to FreeBSD and Linux.  Windows pages have four states: free, reserved, committed, or shareable.
+
+Unlike Linux, Windows supports only two page sizes.
+
+\end{document}
