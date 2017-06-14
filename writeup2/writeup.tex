@@ -1,0 +1,53 @@
+I/O is an important subject in the study of operating systems.  On a low level, operating system I/O functionality defines how a computer interracts with crucial peripheral devices such as disk drives, hard drives, keyboards and mice among many more.  Windows, Linux and FreeBSD all expose I/O operations that make it easier for applications to take advantage of computing resources without being aware of implementation quirks of underlying hardware.
+
+Windows, FreeBSD and Linux implement a driver model to orchestrate access to computer peripheral devices.  However, the I/O models of the three operating systems are markedly distinct in important ways.
+
+	Scatter-gather I/O is another supported feature of all three operating systems.  In this model, data from multiple buffers is written to a single data stream.  This is done atomically, whereby the system guarantees that all reads or writes have occured without interference from other processes. 
+
+* Support of synchronous/asynchronous I/O *
+
+Device I/O on FreeBSD and Linux is very similar.  Hardware devices are exposed as files mounted under the '/dev' directory.  Because UNIX likes to treat everything like a file, devices can be interracted with exactly as normal files can.  Devices are controlled by device drivers.  Device drivers can be compiled into the kernel directly or loaded at runtime using the 'insmod' and 'kld' commands on Linux and FreeBSD respectively.
+
+In Linux systems, there are two types of devices: block and character devices.  These are also respectively referred to as structured and unstructured devices *.  Block devices allow random read/write access to fixed-size chunks of data.  Block device memory is typically cached by the kernel.  This makes block devices suitable for the implementation of file systems.
+
+  This means that the time when data is written from cache to the actual device is not known.  For this reason, read data from block devices cannot be expected to be perfectly up-to-date with the contents of the physical device if recently written data has not yet been flushed from cache to disk.  Due to this flaw, FreeBSD no longer supports block devices *.
+
+  Character devices are known as 'unstructured' because they are accessed as a stream of bytes instead of structure blocks.
+  Character devices require that data is provided in a serial fashion and typically allow large I/O operations to take place.
+
+
+
+
+
+FreeBSD: scatter-gather I/O 
+
+--------------
+I/O Scheduling
+--------------
+
+Many devices contend for device resources.  In a multi-threaded environment, there are many programs that are constantly accessing storage devices.  In order to make sure that data is written and read as efficiently as possible, operating systems must schedule the individual operations correctly.  devices such as mechanically spinning-disk hard drives run inneficiently if the scheduled I/O operations are not ordered correctly.
+
+Linux
+
+
+Windows
+  The Windows implementation of I/O functionality has som key differences compared to Linux and FreeBSD.
+
+  *I/O model*
+  *Plug and Play*
+
+These key differences between Windows and Linux highlight the difference in design methodology.  Linux prefers to design components that are modular, and perform one thing well.  The developers of Windows have chosen to enhance the functionality of the operating system at the cost of increased complexity.
+
+freebsd
+-------
+https://www.freebsd.org/doc/en/books/arch-handbook/driverbasics-char.html
+https://www.freebsd.org/doc/en/books/arch-handbook/driverbasics.html
+
+
+linux
+-----
+http://free-electrons.com/doc/books/ldd3.pdf
+
+windows
+-------
+https://www.microsoftpressstore.com/articles/article.aspx?p=2201309
