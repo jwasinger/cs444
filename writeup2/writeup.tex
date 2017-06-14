@@ -31,7 +31,26 @@ Linux
 
 
 Windows
+
   The Windows implementation of I/O functionality has som key differences compared to Linux and FreeBSD.
+  The Windows implementation of I/O functionality is almost completely different from an architectural point of view compared to the I/O models of FreeBSD and Linux. The Windows I/O subsytem has, at its core, the \textit{I/O Manager}.  This system defines a model for packet-driven I/O whereby, I/O requests are passed via a packet system to their correct drivers.
+  
+  When the \textit{I/o Manager} receives an I/O request, it generates an \textit{IRP (Interrupt Request Packet} which is then consumed by the driver that this \textit{IRP} pertains to.
+
+  Key similarity to Linux: I/O subystem operates on virtual files only.  It is the responsibility of the driver to translate virtual file I/O requests into low-level operations on the specific hardware.
+
+  Compared to FreeBSD and Linux, Windows has a much larger variety of driver types.
+  
+  Printer drivers  help translate graphical content into a printable form.  They typically forward print commands to the kernel space.  This is likely because there are many applications for which Windows needs to have tight control over what is being printed to prevent certain crimes such as counterfet money.
+
+  (User mode driver framework?)
+
+  Kernel Mode Drivers:
+    File System Drivers translate virtual filesystem requests into media-specific commands (network storage, etc.).
+	Drivers which handle peripheral devices usually fall under the management of the Plug and Play system.  The plug and play system allows the operating system to automatically recognize hardware and determine correct drivers for this hardware.  This is done using a system known as the \textit{PnP Manager}.
+	The plug and play system falls under the \textit{Windows Driver Model (WDM)}.  Under this model,  there are three driver types.  \textit{Bus drivers} manage logical and physical buses.  \textit{Function drivers} are given resources by \textit{Bus drivers} by the \textit{PnP Manager}.  \texit{Function drivers expose an interface to the Operating System that abstracts away the details of the hardware they manage.
+
+  Windows 
 
   *I/O model*
   *Plug and Play*
@@ -51,3 +70,4 @@ http://free-electrons.com/doc/books/ldd3.pdf
 windows
 -------
 https://www.microsoftpressstore.com/articles/article.aspx?p=2201309
+https://msdn.microsoft.com/en-us/library/windows/hardware/ff548102(v=vs.85).aspx
