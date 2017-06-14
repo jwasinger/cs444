@@ -16,21 +16,12 @@ In Linux systems, there are two types of devices: block and character devices.  
   Character devices require that data is provided in a serial fashion and typically allow large I/O operations to take place.
 
 
+	Linux device drivers *
 
-
-
+	
 FreeBSD: scatter-gather I/O 
 
---------------
-I/O Scheduling
---------------
-
-Many devices contend for device resources.  In a multi-threaded environment, there are many programs that are constantly accessing storage devices.  In order to make sure that data is written and read as efficiently as possible, operating systems must schedule the individual operations correctly.  devices such as mechanically spinning-disk hard drives run inneficiently if the scheduled I/O operations are not ordered correctly.
-
-Linux
-
-
-Windows
+Windows:
 
   The Windows implementation of I/O functionality has som key differences compared to Linux and FreeBSD.
   The Windows implementation of I/O functionality is almost completely different from an architectural point of view compared to the I/O models of FreeBSD and Linux. The Windows I/O subsytem has, at its core, the \textit{I/O Manager}.  This system defines a model for packet-driven I/O whereby, I/O requests are passed via a packet system to their correct drivers.
@@ -56,6 +47,26 @@ Windows
   *Plug and Play*
 
 These key differences between Windows and Linux highlight the difference in design methodology.  Linux prefers to design components that are modular, and perform one thing well.  The developers of Windows have chosen to enhance the functionality of the operating system at the cost of increased complexity.
+
+--------------
+I/O Scheduling
+--------------
+
+Many devices contend for device resources.  In a multi-threaded environment, there are many programs that are constantly accessing storage devices.  In order to make sure that data is written and read as efficiently as possible, operating systems must schedule the individual operations correctly.  devices such as mechanically spinning-disk hard drives run inneficiently if the scheduled I/O operations are not ordered correctly.
+
+Linux:
+  In Linux, I/O scheduling is done on a per-disk bases
+
+Windows:
+
+ The Windows  I/O scheduling model sees I/O requests as priority based.  There are five I/O priorities: \textit{Critical, High, Normal, Low, Very Low}.  By default, I/O requests have priority of \textit{Normal}.  The Windows Memory Manager uses \textit{Critical} when it is flushing dirty memory from RAM to disk under low memory load.  All Windows background tasks *expand?* use \textit{Very Low} background priority.
+ 
+ These priorities are divided internally into two types of I/O prioritization called \textit{strategies}: \textit{hierarchy prioritization} and \textit{idle prioritization}. \textit{Hierarchy prioritization} applies to all I/O \textit{priorities} except \textit{Very Low}. 
+
+All \textit{Critical priority} I/O must be processed before any \textit{High priority} I/O.  All \textit{High priority} I/O must be processed before any \textit{Normal priority} I/O.  All \textit{Normal priority} I/O must be processed before any \textit{Low priority} I/O.  All \textit{Low priority} I/O is processed after any \textit{High priority} I/O.
+
+When \textit{IRPs} are received, they are put onto different I/O queues based on their calculated priority.
+
 
 freebsd
 -------
