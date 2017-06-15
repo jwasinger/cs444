@@ -24,7 +24,7 @@
 
 %\newcommand{\toc}{\tableofcontents}
 
-\title{CS 444 Writing Assignment 1}
+\title{CS 444 Final Writing}
 \author{Jared Wasinger}
 
 \parindent = 0.0 in
@@ -45,20 +45,20 @@
 \section{Introduction}
 The study of operating system implementation is a very important topic.  Although most computer professionals operate at a level of abstraction far higher than that of the operating system kernel, an understanding of the system pieces and the code that implements them can be key for giving an enhanced insight into the operation of computer systems.
 
-In this class.  We have focused our studies on the implementation of the Linux kernel.  By studying vital subsystems such as memory management, process thread creation and lifetime, the details of implementing device drivers, understanding the practical applications of kernel cryptography we have gained an insight and appreciation into the inner mechanics of the Kernel.  However, this knowledge would be less useful without having a more broad overview of the design of Linux as it compares to other industry standard operating systems.
+In this class.  We have focused our studies on the implementation of the Linux kernel.  By studying vital subsystems such as memory management, process thread creation and lifetime, the details of implementing device drivers, the practical applications of kernel cryptography we have gained an insight and appreciation into the inner mechanics of the kernel.  However, this knowledge would be less useful without having a more broad overview of the design of Linux as compared to other industry standard operating systems.
 
-For the purpose of this study, we have elected to compare and contrast the implementation of the Linux kernel to that of FreeBSD and Windows operating systems.  By understanding the design differences in these industry standard operating systems, we gain a valuable insight into the minds of the developers and design methodologies that they chose.  Feature tradeoffs between the three operating systems highlight the differences in the ecosystems that they have created and perpetuate.
+For the purpose of this paper, I have elected to compare and contrast the implementation of the Linux kernel to that of the FreeBSD and Windows operating systems.  By understanding the design differences in these major operating systems, we gain a valuable insight into the minds of the developers and design methodologies that they chose.  Feature tradeoffs between the three operating systems highlight the differences in the ecosystems that they have created and perpetuate.
 
 \section{Processes, Threads and Scheduling}
-Processes and threads are two key constructs within modern multiprocessor systems.  In order to take advantage of processor resources, multiple threads of execution are created, and from their own point of view run simultaneosuly with other processes.  In order for processors to maintain this abstraction, processors schedule threads in a way that guarantees that CPU resources are dolled out most efficiently.
+Processes and threads are two key constructs within modern multiprocessor systems.  In order to take advantage of processor resources, multiple threads of execution are created, and from their own point of view each controls the entire processor.  In order for processors to maintain this abstraction, processors schedule threads in a way that guarantees that CPU resources are dolled out most efficiently.
 
 Windows, Linux and FreeBSD all share the concepts of threads, processes and CPU scheduling.  However, there are some important fundamental differences between Windows and FreeBSD/Linux that highlight key architectural differences between the two
 
 \subsection{FreeBSD}
 
-	Processes in FreeBSD are similar to Linux in many ways.  The relationship between processes and threads in Linux and FreeBSD systems are hierarchical.  When a system is booted, a special `init` process is started to complete system initialization.  All subsequent processes exist as children of the `init` process.  The system call `clone` is used to create a new process \cite{lkd}.
+	Processes in FreeBSD are similar to Linux in many ways.  The relationship between processes and threads in Linux and FreeBSD systems are hierarchical.  When a system is booted, a special \textit{init} process is started to complete system initialization.  All subsequent processes exist as children of the \textit{init} process.  The system call \textit{clone} is used to create a new process \cite{lkd}.
 
-	In Linux processes are implemented in the kernel via a doubly-linked list known as the `task list`.  Each entry in the `task list` contains information about the state of a given process on the system \cite{lkd}.
+	In Linux and FreeBSD processes are implemented in the kernel via a doubly-linked list known as the \textit{task list}.  Each entry in the \textit{task list} contains information about the state of a given process on the system \cite{lkd}.  Information about each specific process is contained inside a structure known as \textit{task\_struct}.  Another structure, \textit{thread\_info} sits at the lowest part of each process' stack and contains a reference to \textit{task\_struct}:
 
 \begin{lstlisting}
 struct thread_info {
@@ -77,10 +77,7 @@ struct thread_info {
 
 	Both Linux and FreeBSD threads maintain a kernel stack.  This is so that Kernel operations on user-space process can be done without exposing sensitive Kernel information to the user-space.
 
-	The implementation of processes and threads in FreeBSD differs from Linux in several important ways.  
-	FreeBSD makes a clear distinction between threads and processes.  Threads must be spawned by a process.  In their lightest form, threads can share nearly all resources with their parent process (including PID) \cite{freebsd}.
-
-	Both Linux and FreeBSD conform to the POSIX Threads standard.  This was probably chosen because  having multiple operating systems support a common interface for concurrency is mutually benefical to both FreeBSD and Linux.  This is because it is easier to write programs that can be cross-compiled between FreeBSD and Linux operating systems.
+	The implementation of processes and threads in FreeBSD differs from Linux in several important ways.  FreeBSD makes a clear distinction between threads and processes.  Threads must be spawned by a process.  In their lightest form, threads can share nearly all resources with their parent process (including PID).  Both Linux and FreeBSD conform to the POSIX Threads standard.  This was probably chosen because  having multiple operating systems support a common interface for concurrency is mutually benefical to both FreeBSD and Linux.  This is because it is easier to write programs that can be cross-compiled between FreeBSD and Linux operating systems.\cite{lkd}
 
 	The way Linux schedules thread execution is called the \textit{Completely Fair Scheduler}.  It gives each process a roughly equal proportion of the processor's time.  Unlike priority-based scheduling systems \textit{CFS}, decides whether a process should continue running based counting how long it has been running already.  In a time-slice based system, the processor would assign a process a countdown timer for the 'timeslice' that it can run for.  When that timer ticks to zero, the process is pre-empted.
 
@@ -93,92 +90,56 @@ struct thread_info {
 			\item (224-255) idle user
 		\end{itemize}
 
-	The traditional FreeBSD thread scheduler uses a list of all running threads of execution.  Traversing the list once per second, the operating system analyzes thread performance and requirements and adjusts thread priorities accordingly.  This had the effect that, as the number of threads increased over time, traversing the list would become infeasible and represent a significant performance bottleneck.  To address this, the ULE thread scheduling algorithm was developed.
+	The traditional FreeBSD thread scheduler uses a list of all running threads of execution.  Traversing the list once per second, the operating system analyzes thread performance and requirements and adjusts thread priorities accordingly.  This had the effect that, as the number of threads increased over time, traversing the list would become infeasible and represent a significant performance bottleneck.  To address this, the ULE thread scheduling algorithm was developed.\cite{freebsd-proc} 
 
 	In FreeBSD, threads in the bottom-half kernel class will always be given preference.  Tasks in this class are kernel-intterupt threads that need to be run as soon as possible (97).  Threads in the real-time and idle classes can be set by the application using the `rtprio` system call.
 
-	Traditional FreeBSD thread scheduling is similar to Linux in its goal.  FreeBSD thread scheduling is implemented in the form of a round-robin allocated thread system through assignment of processor time slices to threads.  Like Linux, FreeBSD scheduling gives priority to interactive jobs by increasing the scheduling priority of threads that are blocked on I/O operations for 1 or more second (125-126).  
-	I assume that this feature was implemented on both operating systems in order to make them more viable for use on desktop machines which typically run more interactive programs than traditional mainframe computers.
+	Traditional FreeBSD thread scheduling is similar to Linux in its goal.  FreeBSD thread scheduling is implemented in the form of a round-robin allocated thread system through assignment of processor time slices to threads.  Like Linux, FreeBSD scheduling gives priority to interactive jobs by increasing the scheduling priority of threads that are blocked on I/O operations for 1 or more second (125-126).  I assume that this feature was implemented on both operating systems in order to make them more viable for use on desktop machines which typically run more interactive programs than traditional mainframe computers.
 
-\section{Comparing Windows with Linux}
+\subsection{Windows}
 Windows, like FreeBSD implements a priority-based thread scheduling system.  Each thread is assigned a scheduling priority.  Threads of the same priority are run in a round-robin manner whereby each thread is given a fixed time slice to run for.  Threads in lower priority classes can be pre-empted at any time by threads in higher priority classes.
 
 Unlike Linux-based operating systems which make no distinction between threads and processes, Windows defines a clear distinction between threads and processes.  Each process in windows is represented by an instance of an executive process (EPROCESS) structure.  Among other things, this structure also contains references to the threads allocated for any given process.  For each process that is executing a Win32 executable, there is a separate structure maintained in parallel by the Win32 subsystem process (CRSS) \cite{windows}.
 	Windows introduces the concept of a 'protected process'.  An administrator has full control over the code running in any process on the system.  However, this elevated privilege could potentially be used to perform illegal activities (such as extracting movie/song information from movie/video player processes).  Protected processes exist alongside normal process.  However, they add significant constraints to access rights from other processes executing on the system.  Protected processes can only be created if the executable image file has been signed with a special Windows Media Certificate \cite{windows}.  This was probably implemented this way so that Windows would be more attractive as a commercial platform for software.  This way, companies building video/sound editing and playback programs would feel more comfortable deploying their software to Windows.  It is also likely that Microsoft gets to make some extra profit by charging to issue the special Windows Media Certificates.
 
-As compared to Linux, the system by which the Windows Operating system manages 
-
-
 \section{I/O and Provided Functionality}
 
-I/O is an important subject in the study of operating systems.  On a low level, operating system I/O functionality defines how a computer interracts with crucial peripheral devices such as disk drives, hard drives, keyboards and mice among many more.  Windows, Linux and FreeBSD all expose I/O operations that make it easier for applications to take advantage of computing resources without being aware of implementation quirks of underlying hardware.
+I/O is an important subject in the study of operating systems.  On a low level, operating system I/O functionality defines how a computer interracts with crucial peripheral devices such as disk drives, hard drives, keyboards and mice among many others.  Windows, Linux and FreeBSD all expose I/O operations that make it easier for applications to take advantage of computing resources without being aware of implementation quirks of underlying hardware.
 
 Windows, FreeBSD and Linux implement a driver model to orchestrate access to computer peripheral devices.  However, the I/O models of the three operating systems are markedly distinct in important ways.
 
 	Scatter-gather I/O is another supported feature of all three operating systems.  In this model, data from multiple buffers is written to a single data stream.  This is done atomically, whereby the system guarantees that all reads or writes have occured without interference from other processes. 
 
-* Support of synchronous/asynchronous I/O *
-
 Device I/O on FreeBSD and Linux is very similar.  Hardware devices are exposed as files mounted under the '/dev' directory.  Because UNIX likes to treat everything like a file, devices can be interracted with exactly as normal files can.  Devices are controlled by device drivers.  Device drivers can be compiled into the kernel directly or loaded at runtime using the 'insmod' and 'kld' commands on Linux and FreeBSD respectively.
 
-In Linux systems, there are two types of devices: block and character devices.  These are also respectively referred to as structured and unstructured devices *.  Block devices allow random read/write access to fixed-size chunks of data.  Block device memory is typically cached by the kernel.  This makes block devices suitable for the implementation of file systems.
+In Linux systems, there are two types of devices: block and character devices.  These are also respectively referred to as structured and unstructured devices.  Block devices allow random read/write access to fixed-size chunks of data.  Block device memory is typically cached by the kernel.  This makes block devices suitable for the implementation of file systems.  This means that the time when data is written from cache to the actual device is not known.  For that reason, read data from block devices cannot be expected to be perfectly up-to-date with the contents of the physical device if recently written data has not yet been flushed from cache to disk.  Due to this flaw, FreeBSD no longer supports block devices \cite{freebsd-proc}.
 
-  This means that the time when data is written from cache to the actual device is not known.  For this reason, read data from block devices cannot be expected to be perfectly up-to-date with the contents of the physical device if recently written data has not yet been flushed from cache to disk.  Due to this flaw, FreeBSD no longer supports block devices *.
+  Character devices are known as 'unstructured' because they are accessed as a stream of bytes instead of structure blocks.  Character devices require that data is provided in a serial fashion and typically allow large I/O operations to take place \cite{lkd}.
 
-  Character devices are known as 'unstructured' because they are accessed as a stream of bytes instead of structure blocks.
-  Character devices require that data is provided in a serial fashion and typically allow large I/O operations to take place.
+\subsection{Windows}
 
+  The Windows implementation of I/O functionality is almost completely different from an architectural point of view compared to the I/O models of FreeBSD and Linux. The Windows I/O subsytem has, at its core, the \textit{I/O Manager}.  This system defines a model for packet-driven I/O whereby, I/O requests are passed via a packet system to their correct drivers.  When the \textit{I/O Manager} receives an I/O request, it generates an \textit{IRP (Interrupt Request Packet)} which is then consumed by the driver that this \textit{IRP} pertains to.
 
-	Linux device drivers *
+  Like Linux, Windows I/O subystem operates on virtual files only.  It is the responsibility of the driver to translate virtual file I/O requests into low-level operations on the specific hardware.
 
-	
-FreeBSD: scatter-gather I/O 
-
-Windows:
-
-  The Windows implementation of I/O functionality has som key differences compared to Linux and FreeBSD.
-  The Windows implementation of I/O functionality is almost completely different from an architectural point of view compared to the I/O models of FreeBSD and Linux. The Windows I/O subsytem has, at its core, the \textit{I/O Manager}.  This system defines a model for packet-driven I/O whereby, I/O requests are passed via a packet system to their correct drivers.
-  
-  When the \textit{I/o Manager} receives an I/O request, it generates an \textit{IRP (Interrupt Request Packet)} which is then consumed by the driver that this \textit{IRP} pertains to.
-
-  Key similarity to Linux: I/O subystem operates on virtual files only.  It is the responsibility of the driver to translate virtual file I/O requests into low-level operations on the specific hardware.
-
-  Compared to FreeBSD and Linux, Windows has a much larger variety of driver types.
-  
-  Printer drivers  help translate graphical content into a printable form.  They typically forward print commands to the kernel space.  This is likely because there are many applications for which Windows needs to have tight control over what is being printed to prevent certain crimes such as counterfet money.
-
-  (User mode driver framework?)
-
-  Kernel Mode Drivers:
-    File System Drivers translate virtual filesystem requests into media-specific commands (network storage, etc.).
-	Drivers which handle peripheral devices usually fall under the management of the Plug and Play system.  The plug and play system allows the operating system to automatically recognize hardware and determine correct drivers for this hardware.  This is done using a system known as the \textit{PnP Manager}.
-	The plug and play system falls under the \textit{Windows Driver Model (WDM)}.  Under this model,  there are three driver types.  \textit{Bus drivers} manage logical and physical buses.  \textit{Function drivers} are given resources by \textit{Bus drivers} by the \textit{PnP Manager}.  \textit{Function drivers} expose an interface to the Operating System that abstracts away the details of the hardware they manage.
-
-  Windows 
-
-  *I/O model*
-  *Plug and Play*
+  Windows has a much larger variety of driver types than Linux.  Printer drivers  help translate graphical content into a printable form.  They typically forward print commands to the kernel space.  This is likely because there are many applications for which Windows needs to have tight control over what is being printed to prevent certain crimes such as counterfet money.  File System Drivers translate virtual filesystem requests into media-specific commands (network storage, etc.).
+	Drivers which handle peripheral devices usually fall under the management of the Plug and Play system.  The plug and play system allows the operating system to automatically recognize hardware and determine correct drivers for this hardware.  This is done using a system known as the \textit{PnP Manager}.  The plug and play system falls under the \textit{Windows Driver Model (WDM)}.  Under this model,  there are three driver types.  \textit{Bus drivers} manage logical and physical buses.  \textit{Function drivers} are given resources by \textit{Bus drivers} by the \textit{PnP Manager}.  \textit{Function drivers} expose an interface to the Operating System that abstracts away the details of the hardware they manage.
 
 These key differences between Windows and Linux highlight the difference in design methodology.  Linux prefers to design components that are modular, and perform one thing well.  The developers of Windows have chosen to enhance the functionality of the operating system at the cost of increased complexity.
 
---------------
-I/O Scheduling
---------------
+\subsection {I/O Scheduling}
 
 Many devices contend for device resources.  In a multi-threaded environment, there are many programs that are constantly accessing storage devices.  In order to make sure that data is written and read as efficiently as possible, operating systems must schedule the individual operations correctly.  devices such as mechanically spinning-disk hard drives run inneficiently if the scheduled I/O operations are not ordered correctly.
 
-Linux:
-  In Linux, I/O scheduling is done on a per-disk bases
+In Linux I/O scheduling is done on a per-device basis.  Each block device maintains a request queue it is the responsibility of the chosen I/O scheduler to make sure that requests are trasferred to devices optimally.  Linux provides several I/O schedulers.\cite{lkd}
 
-Windows:
-
- The Windows  I/O scheduling model sees I/O requests as priority based.  There are five I/O priorities: \textit{Critical, High, Normal, Low, Very Low}.  By default, I/O requests have priority of \textit{Normal}.  The Windows Memory Manager uses \textit{Critical} when it is flushing dirty memory from RAM to disk under low memory load.  All Windows background tasks *expand?* use \textit{Very Low} background priority.
+ The Windows I/O model is much different than Linux.  Windows sees I/O requests as priority based.  There are five I/O priorities: \textit{Critical, High, Normal, Low, Very Low}.  By default, I/O requests have priority of \textit{Normal}.  The Windows Memory Manager uses \textit{Critical} when it is flushing dirty memory from RAM to disk under low memory load.  All Windows background tasks *expand?* use \textit{Very Low} background priority.
  
  These priorities are divided internally into two types of I/O prioritization called \textit{strategies}: \textit{hierarchy prioritization} and \textit{idle prioritization}. \textit{Hierarchy prioritization} applies to all I/O \textit{priorities} except \textit{Very Low}. 
 
 All \textit{Critical priority} I/O must be processed before any \textit{High priority} I/O.  All \textit{High priority} I/O must be processed before any \textit{Normal priority} I/O.  All \textit{Normal priority} I/O must be processed before any \textit{Low priority} I/O.  All \textit{Low priority} I/O is processed after any \textit{High priority} I/O.
 
-When \textit{IRPs} are received, they are put onto different I/O queues based on their calculated priority.
+When \textit{IRPs} are received, they are put onto different I/O queues based on their calculated priority.\cite{windows}
 
 \section{Memory Management}
 
@@ -186,7 +147,7 @@ Memory management is an incredibly important for an operating system.  In order 
 
 For all Windows, FreeBSD and Linux, Pages are the basic unit of memory allocation.
 
-The kernel represents all physical pages on the system using the \textbf{struct page} structure.
+The kernel represents all physical pages on the system using the \textit{page} structure.
 Reference tracking is used to mark which pages are in use.  Pages in Linux represent the physical memory of a system (not virtual).  Thus, the contents of kernel pages are susceptible to change.
 
 \begin{lstlisting}
@@ -202,9 +163,9 @@ struct page {
 };
 \end{lstlisting}
 
-Many Linux systems support multiple page sizes.  32-bit architectures have 4KB pages while 64-bit architectures have 8KB pages (Love, 231).
+Many Linux systems support multiple page sizes.  32-bit architectures have 4KB pages while 64-bit architectures have 8KB pages.
 
-Pages are further segregated into zones.  Zones better delineate the different properties of pages.  For example, some zones may refer to areas of high memory.  Other zones represent physical memory capable of performing Direct Memory Access.
+Pages are further segregated into zones.  Zones better delineate the different properties of pages.  For example, some zones may refer to areas of high memory.  Other zones represent physical memory capable of performing Direct Memory Access\cite{lkd}.
 
 \begin{lstlisting}
 struct zone {
@@ -239,17 +200,17 @@ struct zone {
 };
 \end{lstlisting}
 
-The kernel presents a set of functions to allocate memory: \textbf{kmalloc}, \textbf{vmalloc}. \textbf{kmalloc} is the most commonly invoked function which allocates physical memory.
+The kernel presents a set of functions to allocate memory: \textit{kmalloc}, \textit{vmalloc}. \textit{kmalloc} is the most commonly invoked function which allocates physical memory.
 
-Linux implements page caching by using physical pages in RAM to correspond to physical blocks on a disk.  Linux implements the \textbf{write-back} strategy for processing write operations.  Using this mechanism, the operating system makes write calls to the page-cache directly, only periodically writing these back to disk.
+Linux implements page caching by using physical pages in RAM to correspond to physical blocks on a disk.  Linux implements the \textit{write-back} strategy for processing write operations.  Using this mechanism, the operating system makes write calls to the page-cache directly, only periodically writing these back to disk.
 
-\section{FreeBSD and Linux}
+\section{FreeBSD}
 
 	FreeBSD and Linux are very similar with respect to their memory management.  When a process is created, it shares the virtual address space of its parent process by default.  In general, pages are only copied from process when the child process writes to those pages.  This is known as \textit{copy-on-write} and is a memory optimization used by Windows Linux and FreeBSD to minimize page use.
 
-Like Linux, FreeBSD uses an array of page structures which represent all the physical pages on the system.  In FreeBSD, these pages are represented by \textbf{struct vm\_page\_t}.  
+Like Linux, FreeBSD uses an array of page structures which represent all the physical pages on the system.  In FreeBSD, these pages are represented by \textit{struct vm\_page\_t}.  
 
-FreeBSD differs slightly from Linux with respect to the specific implementation of the collection of \textbf{struct vm\_page\_t}.  FreeBSD pages can be in one of five states: wired, active, inactive, cache or free.
+FreeBSD differs slightly from Linux with respect to the specific implementation of the collection of \textit{struct vm\_page}.  
 
 \begin{lstlisting}
 struct vm_page {
@@ -277,25 +238,32 @@ struct vm_page {
 };
 \end{lstlisting}
 
-FreeBSD keeps instances of the \textbf{struct vm\_page\_t} stored in a doubly-linked array.  For each possible page state, FreeBSD maintains a set of queues of varying sizes (based on the size of processor's L1/L2 Cache)
+FreeBSD keeps instances of the \textit{struct vm\_page} stored in a doubly-linked array.  For each possible page state, FreeBSD maintains a set of queues of varying sizes (based on the size of processor's L1/L2 Cache)
 
-\section{Windows Memory Management}
+FreeBSD pages can be in one of five states: wired, active, inactive, cache or free.
 
-Windows memory management has significant differences compared to FreeBSD and Linux.  Virtual memory is provided by a set of system services known as the Memory Manager.  These services include allocation and de-allocation of virtual memory, memory sharing between processes and others.
+\section{Windows}
+
+Windows memory management has significant differences compared to FreeBSD and Linux.  Virtual memory is provided by a set of system services known as the \textit{Memory Manager}.  These services include allocation and de-allocation of virtual memory, memory sharing between processes and others.
 
 Due to the difference in which Windows views threads vs processes, it allocates virtual address mappings differently than FreeBSD and Linux.  When a process is allocated in 32bit Windows, the operating system allocates a default of 2GB of virtually mapped memory.
 
-The \textit{Memory Manager} has two main tasks: translating virtual address spaces into physical memory and handling memory paging when the system is using more RAM than available.  The services of the \textit{Memory Manager} are provided through the Windows API via the  ... calls.
+The \textit{Memory Manager} has two main tasks: translating virtual address spaces into physical memory and handling memory paging when the system is using more RAM than available.  The services of the \textit{Memory Manager} are provided through the Windows API.
 
 Windows also represents internal memory using pages which are similar to FreeBSD and Linux.  Windows pages have four states: free, reserved, committed, or shareable.
 
-Unlike Linux, Windows supports only two page sizes...
+Unlike Linux, Windows supports only two page sizes on any given architecture.
 
 Like Linux and FreeBSD, Windows uses copy-on-write technique to optimize memory usage.  If a process maps a section of read/write shared memory, the memory will only be copied when the process tries to modify it.
 
 \section{Conclusion}
 
-As has been shown in this brief overview, the Linux, FreeBSD and Windows operating systems have important differences in the details of their implementation and the features that they offer.  These differences highlight the target-users of the operating systems.  Windows, with a focus on the average consumer has put considerable resources into the development of the \textit{Windows Driver Model} and the \textit{Plug and Play} driver subsystem.  The ease by which the operating system handles peripheral devices is an important factor in its dominance in the personal computing market.  FreeBSD, while very similar in implementation and features to Linux, has some important differences that highlight the difference in design compare to Linux.  While Linux aims to make components of its operating system highly modular (potentially at the expense of flexibility and power), FreeBSD has implementated several features which fly in the face of this design goal.  An example of this is the priority-based thread scheduling system that FreeBSD uses.  This is somewhat similar to Windows and higlights the fact that the developers of FreeBSD chose to create a more fully-featured thread scheduling system at the expense of creating a more complex architecture.
+As has been shown in this brief overview, the Linux, FreeBSD and Windows operating systems have important differences in the details of their implementations and the features that they offer.  These differences highlight the target-users of the operating systems.  Windows, with a focus on the average consumer has put considerable resources into the development of the \textit{Windows Driver Model} and the \textit{Plug and Play} driver subsystem.  The ease by which the operating system handles peripheral devices is an important factor in its dominance in the personal computing market.  FreeBSD, while very similar in implementation and features to Linux, has some important differences that highlight the difference in design compare to Linux.  While Linux aims to make components of its operating system highly modular (potentially at the expense of flexibility and power), FreeBSD has implementated several features which fly in the face of this design goal.  An example of this is the priority-based thread scheduling system that FreeBSD uses.  This is somewhat similar to Windows and higlights the fact that the developers of FreeBSD chose to create a more fully-featured thread scheduling system at the expense of creating a more complex architecture.
 
-The comparison here only higlights  several differences between FreeBSD, Windows and Linux within several important areas of operating system implementation
+The comparison here only higlights  several differences between FreeBSD, Windows and Linux within several important areas of operating system implementation.  There are many other areas of contention and interest.
+
+\bibliographystyle{plain}
+\bibliography{bibfile}
+\newpage
+
 \end{document}
